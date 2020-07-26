@@ -1,28 +1,32 @@
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
 import Model.database;
 
 public class calendar {
 	public static void main(String[] args) {
 		database db = new database();
-		db.getData("*", "membres", "");
-		try {
-			ResultSet result = db.getData("*", "membres", "");
-			while(result.next()) {
-				for (int i = 1; i<result.getMetaData().getColumnCount() + 1; i ++ ) {
-					System.out.println(result.getString(i));
-				}
-			}
-		} catch (SQLException e) {
-			System.out.println("error");
-		}
+		DefaultTableModel data = db.getData("*", "membres", "");
+		System.out.println(data);
+		
+		JFrame f = new JFrame();
+		
+		
+		JButton b = new JButton("Valider");
+		b.setBounds(0, 0, 100, 30);
+		
+		JTable t = new JTable();
+		t.setModel(data);
+		f.add(b);
+		t.setBounds(30,40,200,300);          
+		JScrollPane sp=new JScrollPane(t);    
+		f.add(sp);          
+		f.setSize(400, 400);
+		f.setVisible(true);
 		
 	}
 }

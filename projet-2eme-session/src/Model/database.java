@@ -10,7 +10,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Observable;
+
+import javax.swing.table.DefaultTableModel;
 
 /**
  * @author nathan debongnie
@@ -29,31 +32,67 @@ public class database extends Observable {
 		return co;
 	};
 	
-	public ResultSet getData (String column,String table, String condition) {
-		ResultSet result = null;
+	public DefaultTableModel getData (String column,String table, String condition) {
+		DefaultTableModel model = null;
 		try {
 			Connection connect = connexion();
 			Statement state = connect.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			//L'objet result contient le résultat de la requete SQL
-			result = state.executeQuery("SELECT "+ column +" FROM "+ table + " " + condition);
+			ResultSet result = state.executeQuery("SELECT "+ column +" FROM "+ table + " " + condition);
+			
+			String[] names = new String[result.getMetaData().getColumnCount()];
+			for (int i = 0; i < result.getMetaData().getColumnCount(); i ++ ) {
+				names[i] = result.getMetaData().getColumnName(i + 1);
+			}
+			
+			model = new DefaultTableModel(names, 0);
+			
+			while(result.next()) {
+				String[] values = new String[result.getMetaData().getColumnCount()];
+				for (int i = 0; i < result.getMetaData().getColumnCount(); i ++ ) {
+					values[i] = result.getString(i + 1);
+				}
+				model.addRow(values);
+			}
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		return result;
+		return model;
 	};
-		
-	public static void main (String[] args) {
+	
+	public String[][] getDataObject (String column,String table, String condition) {
+		String[][] jtable = null;
 		try {
-			database db = new database();
-			ResultSet result = db.getData("*", "membres", "");
+			ArrayList<Object> data = new ArrayList<Object>();
+			Connection connect = connexion();
+			Statement state = connect.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			ResultSet result = state.executeQuery("SELECT "+ column +" FROM "+ table + " " + condition);
+
+			String[] jcolumn = new String[result.getMetaData().getColumnCount()];
+			jtable = new String[result.getMetaData().getColumnCount() + 1][];
+			
+			for (int i = 1; i< result.getMetaData().getColumnCount(); i++) {
+				data.add(result.getMetaData().getColumnName(i));
+			}
+			for (int i = 0; i< data.size(); i++) {
+				jcolumn[i] = data.get(i).toString();
+			}
+			jtable[0] = jcolumn;
+			int x = 1;
 			while(result.next()) {
-				for (int i = 1; i<result.getMetaData().getColumnCount() + 1; i ++ ) {
-					System.out.println(result.getString(i));
+				data.clear();
+				for (int i = 0; i < result.getMetaData().getColumnCount(); i ++ ) {
+					data.add(result.getObject(i + 1));
 				}
+				for (int i = 0; i< data.size(); i++) {
+					jcolumn[i] = data.get(i).toString();
+				}
+				jtable[x] = jcolumn;
+				x++;
 			}
 		} catch (SQLException e) {
 			System.out.println("error");
 		}
+		return jtable;
 	}
 }
 
