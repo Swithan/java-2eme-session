@@ -7,37 +7,21 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import Model.database;
 
 public class calendar {
 	public static void main(String[] args) {
-		
-		DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
-
-		Date dateobj = new Date();
-		System.out.println(df.format(dateobj));
-		
-		int date = dateobj.getDate() - 1;
-		dateobj.setDate(date);
-		String yesterday = df.format(dateobj);
-		System.out.println(yesterday);
-		
-		
+		database db = new database();
+		db.getData("*", "membres", "");
 		try {
-			System.out.println("start");
-			Class.forName("org.postgresql.Driver");
-			Connection co = DriverManager.getConnection("jdbc:postgresql://localhost:5432/java", "postgres", "N@tDeb22");
-			PreparedStatement stmt = co.prepareStatement("SELECT * FROM membres", ResultSet.TYPE_SCROLL_INSENSITIVE);
-			ResultSet result = stmt.executeQuery();
-			ResultSetMetaData rsmd = result.getMetaData();
+			ResultSet result = db.getData("*", "membres", "");
 			while(result.next()) {
-				System.out.println(result.getRow());
-				
-				for (int i = 1; i<rsmd.getColumnCount() + 1; i ++ ) {
+				for (int i = 1; i<result.getMetaData().getColumnCount() + 1; i ++ ) {
 					System.out.println(result.getString(i));
 				}
 			}
-		} catch (ClassNotFoundException | SQLException e) {
-			System.out.println("error "+ e);
+		} catch (SQLException e) {
+			System.out.println("error");
 		}
 		
 	}
