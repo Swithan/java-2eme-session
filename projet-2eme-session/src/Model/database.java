@@ -58,41 +58,5 @@ public class database extends Observable {
 			}
 		return model;
 	};
-	
-	public String[][] getDataObject (String column,String table, String condition) {
-		String[][] jtable = null;
-		try {
-			ArrayList<Object> data = new ArrayList<Object>();
-			Connection connect = connexion();
-			Statement state = connect.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			ResultSet result = state.executeQuery("SELECT "+ column +" FROM "+ table + " " + condition);
-
-			String[] jcolumn = new String[result.getMetaData().getColumnCount()];
-			jtable = new String[result.getMetaData().getColumnCount() + 1][];
-			
-			for (int i = 1; i< result.getMetaData().getColumnCount(); i++) {
-				data.add(result.getMetaData().getColumnName(i));
-			}
-			for (int i = 0; i< data.size(); i++) {
-				jcolumn[i] = data.get(i).toString();
-			}
-			jtable[0] = jcolumn;
-			int x = 1;
-			while(result.next()) {
-				data.clear();
-				for (int i = 0; i < result.getMetaData().getColumnCount(); i ++ ) {
-					data.add(result.getObject(i + 1));
-				}
-				for (int i = 0; i< data.size(); i++) {
-					jcolumn[i] = data.get(i).toString();
-				}
-				jtable[x] = jcolumn;
-				x++;
-			}
-		} catch (SQLException e) {
-			System.out.println("error");
-		}
-		return jtable;
 	}
-}
 

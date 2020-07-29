@@ -1,7 +1,5 @@
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
+package Vue;
+import java.awt.BorderLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -10,6 +8,11 @@ import Model.database;
 
 public class calendar extends JFrame{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4131581731669920940L;
+
 	private JToolBar createToolBar () {
 		JToolBar bar = new JToolBar ();
 		
@@ -32,15 +35,13 @@ public class calendar extends JFrame{
 		this.setLocationRelativeTo(null);
 		
 		database db = new database();
-		DefaultTableModel data = db.getData("nom as \"Nom\", prenom as \"Prénom\", groupe as \"Groupe\", presence as \"Présence\"", "membres join presence on membres.id = presence.nageur", "");
+		DefaultTableModel data = db.getData("nom as \"Nom\", prenom as \"Prénom\", groupe as \"Groupe\", presence as \"Présence\", motif as \"Motif\"", "membres join presence on membres.id = presence.nageur", "");
 		
-		JTable t = new JTable();
+		JTable t = new JTable ();
 		t.setModel(data);
-		
-		
-		
-		JPanel contentPane = (JPanel) this.getContentPane();
-		contentPane.add(createToolBar());
+				
+		JPanel contentPane = (JPanel) getContentPane();
+		contentPane.add(createToolBar(), BorderLayout.NORTH);
 
 		contentPane.add(t);
 
