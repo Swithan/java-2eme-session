@@ -19,7 +19,7 @@ import javax.swing.table.DefaultTableModel;
  * @author nathan debongnie
  *
  */
-public class database extends Observable {
+public class Database {
 
 	private Connection connexion () {
 		Connection co = null;
