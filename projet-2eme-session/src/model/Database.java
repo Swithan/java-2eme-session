@@ -4,11 +4,13 @@
 package model;
 
 import java.sql.Connection;
-import java.sql.Date;
+import java.util.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
+
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -81,8 +83,22 @@ public class Database {
 		return model;
 	}
 
-	public void updateData(String column, String data) {
-		String sql = "";
+	public void insertData(String table, String columns, String values) {
+		String sql = "INSERT INTO "+table+" ("+columns+") VALUES ("+values+")";
+		
+		try {
+			Connection co = connexion();
+			Statement state;
+			state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			int result = state.executeUpdate(sql);
+			System.out.println(result);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void updateData(String table, String column, String data) {
+		String sql = "UPDATE "+table+" SET ";
 		try {
 			Connection co = connexion();
 			Statement state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);

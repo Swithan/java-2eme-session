@@ -3,6 +3,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -11,6 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import model.Database;
+import model.Presence;
 
 public class GUI extends JFrame implements ActionListener, TableModelListener {
 
@@ -28,6 +30,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	public JMenuItem membres = new JMenuItem("Membres");
 	
 	//présences :
+	SimpleDateFormat format = new SimpleDateFormat("dd-MM-yyyy");
 	public JLabel date = new JLabel();
 	public Date today = new Date();
 	public JButton dateBefore = new JButton("<--");
@@ -97,6 +100,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		scrollPaneMembre.setBounds(0, 25, 500, 395);
 
 		sendPresences.setBounds(0, 420, 500, 25);
+		sendPresences.addActionListener(this);
 		
 		window.setVisible(false);
 		changeDate();
@@ -146,7 +150,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	public void actionPerformed(ActionEvent e) 
     { 
 		Database db = new Database();
-
+		Presence p = new Presence();
 		Object x = e.getSource();
 		if (x == presence) {
 			presence(db);
@@ -155,26 +159,38 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		} else if (x == membres){
 			System.out.println(e.getActionCommand() + " selected."); 
 		} else if (x == dateBefore) {
+			// TODO
 			today.setDate(today.getDate() - 1);
 			window.setVisible(false);
 			window.remove(left);
-			left.setText(today.toLocaleString());
+			left.setText(format.format(today));
 			window.add(left);
 			window.setVisible(true);
 		} else if (x == dateNext) {
+			// TODO
 			today.setDate(today.getDate() + 1);
 			window.setVisible(false);
 			window.remove(left);
-			left.setText(today.toLocaleString());
+			left.setText(format.format(today));
 			window.add(left);
 			window.setVisible(true);
 		} else if(x == sendAbsence) {
 			String m = motif.getText();
-			System.out.println(motif.getText());
 			if(m.length() > 0) {
 				dataMembre.setValueAt(m, row, dataMembre.getColumnCount()-1);
 				frame.setVisible(false);
+				//row => id membre
+				//date => date sélectionnée
+				//motif => motif absence
+				p.setAbsent(db, row+1, today, motif.getText());
+				motif.setText(null);
 			}
+		} else if (x == sendPresences) {
+			competition.setEnabled(true);
+			membres.setEnabled(true);
+			dateBefore.setEnabled(true);
+			dateNext.setEnabled(true);
+			p.takePresences();
 		}
     }
 
@@ -185,7 +201,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		dateNext = new JButton("-->");
 		dateNext.setBounds(400, 0, 100, 25);
 
-		left.setText(today.toLocaleString());
+		left.setText(format.format(today));
 		dateBefore.addActionListener(this);
 		left.add(dateBefore);
 		dateNext.addActionListener(this);
@@ -234,5 +250,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		frame.add(sendAbsence, BorderLayout.SOUTH);
 		
 		frame.setVisible(true);
+		
+		competition.setEnabled(false);
+		membres.setEnabled(false);
+		dateBefore.setEnabled(false);
+		dateNext.setEnabled(false);
 	}
 }
