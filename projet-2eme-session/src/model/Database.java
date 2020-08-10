@@ -1,18 +1,14 @@
 /**
  * 
  */
-package Model;
+package model;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Observable;
-
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -44,19 +40,57 @@ public class Database {
 				names[i] = result.getMetaData().getColumnName(i + 1);
 			}
 			
-			model = new DefaultTableModel(names, 0);
+			model = new DefaultTableModel(names, 0) {
+				/**
+				 * 
+				 */
+				private static final long serialVersionUID = 4889741207303239583L;
+
+				@Override
+			    public boolean isCellEditable(int row, int column) {
+					return column == this.findColumn("Absent");
+			    }
+				@Override
+		        public Class<?> getColumnClass(int columnIndex) {
+					int col = this.findColumn("Absent");
+					if (columnIndex == col) return Boolean.class;
+					else return String.class;
+		        }
+			};
 			
 			while(result.next()) {
-				String[] values = new String[result.getMetaData().getColumnCount()];
+				Object[] values = new Object[result.getMetaData().getColumnCount()];
 				for (int i = 0; i < result.getMetaData().getColumnCount(); i ++ ) {
-					values[i] = result.getString(i + 1);
+					values[i] = result.getObject(i + 1);
 				}
 				model.addRow(values);
+			}			
+			result.last();
+			Object[] values = new Object[result.getRow()];
+			for(int i = 0; i< values.length; i++) {
+				values[i] = false;
 			}
-			} catch (SQLException e) {
+			if (model.findColumn("Groupe") > 0) {
+				model.addColumn("Absent", values);
+				values = null;
+				model.addColumn("Motif", values);
+			}
+		} catch (SQLException e) {
 				e.printStackTrace();
-			}
+		}
 		return model;
+	}
+
+	public void updateData(String column, String data) {
+		String sql = "";
+		try {
+			Connection co = connexion();
+			Statement state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			ResultSet result = state.executeQuery(sql);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
 	};
 	}
 

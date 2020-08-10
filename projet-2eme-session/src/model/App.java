@@ -1,17 +1,18 @@
 /**
  * 
  */
-package Model;
+package model;
 
-import Vue.GUI;
+import vue.GUI;
 
 /**
- * @author natha
+ * @author nathan Debongnie
  *
  */
-public class main {
+public class App {
 
 	/**
+	 * 
 	 * @param args
 	 */
 	public static void main(String[] args) {
@@ -21,5 +22,4 @@ public class main {
 		gui.createInterface(db);
 		gui.window.setVisible(true);
 	}
-
 }
