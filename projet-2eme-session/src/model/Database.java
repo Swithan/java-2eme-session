@@ -4,13 +4,10 @@
 package model;
 
 import java.sql.Connection;
-import java.util.Date;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.SimpleDateFormat;
-
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -43,9 +40,6 @@ public class Database {
 			}
 			
 			model = new DefaultTableModel(names, 0) {
-				/**
-				 * 
-				 */
 				private static final long serialVersionUID = 4889741207303239583L;
 
 				@Override
@@ -56,7 +50,7 @@ public class Database {
 		        public Class<?> getColumnClass(int columnIndex) {
 					int col = this.findColumn("Absent");
 					if (columnIndex == col) return Boolean.class;
-					else return String.class;
+					else return Object.class;
 		        }
 			};
 			
@@ -102,7 +96,10 @@ public class Database {
 		try {
 			Connection co = connexion();
 			Statement state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			ResultSet result = state.executeQuery(sql);
+			int result = state.executeUpdate(sql);
+			if (result>0) {
+				System.out.println("Row(s) updated");
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
