@@ -77,18 +77,18 @@ public class Database {
 		return model;
 	}
 
-	public void insertData(String table, String columns, String values) {
+	public int insertData(String table, String columns, String values) {
 		String sql = "INSERT INTO "+table+" ("+columns+") VALUES ("+values+")";
-		
+		int result = 0;
 		try {
 			Connection co = connexion();
 			Statement state;
 			state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-			int result = state.executeUpdate(sql);
-			System.out.println(result);
+			result = state.executeUpdate(sql);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		return result;
 	}
 	
 	public void updateData(String table, String column, String data) {

@@ -14,4 +14,9 @@ public class Membre {
 			return true;
 		}
 	}
+
+	public void records(Object id) {
+		// TODO Auto-generated method stub
+		System.out.println(id);
+	}
 }
