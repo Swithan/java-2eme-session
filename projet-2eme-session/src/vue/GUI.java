@@ -3,6 +3,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -16,6 +18,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+import model.Competition;
 import model.Database;
 import model.Membre;
 import model.Presence;
@@ -125,6 +128,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.remove(club);
 		window.remove(scrollPaneCompet);
 		window.remove(scrollPaneMembre);
+		window.remove(addMember);
+		presence.setEnabled(false);
+		membres.setEnabled(true);
+		competition.setEnabled(true);
 
 		window.add(scrollPanePresences);
 		window.add(sendPresences);
@@ -141,7 +148,19 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		dataCompet.setModel(data);		
 		dataCompet.setName("Presences");
 		dataCompet.setBounds(0, 0, 500, 425);
-		
+		dataCompet.getTableHeader().setReorderingAllowed(false);
+		//dataCompet.setFocusable(false);
+		dataCompet.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent me) {
+				if (me.getClickCount() == 2) {
+					JTable target = (JTable)me.getSource();
+					int row = target.getSelectedRow();
+					int column = target.getSelectedColumn();
+					Competition compet = new Competition();
+					compet.editCompet(dataCompet.getValueAt(row, 0));
+				}
+			}
+		});
 		scrollPaneCompet = new JScrollPane(dataCompet);
 		dataCompet.setFillsViewportHeight(true);
 		scrollPaneCompet.setBounds(0, 0, 500, 425);
@@ -150,6 +169,12 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.remove(sendPresences);
 		window.remove(left);
 		window.remove(scrollPaneMembre);
+		window.remove(addMember);
+
+		presence.setEnabled(true);
+		membres.setEnabled(true);
+		competition.setEnabled(false);
+		
 		window.add(scrollPaneCompet);
 		window.setVisible(true);
 	}
@@ -166,10 +191,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		Presence p = new Presence();
 		Membre m = new Membre();
 		Object x = e.getSource();
+		
+		//Gestion des présences
 		if (x == presence) {
 			presence(db);
-		} else if (x == competition) {
-			competition(db);
 		} else if (x == dateBefore) {
 			today.setDate(today.getDate() - 1);
 			window.setVisible(false);
@@ -201,7 +226,17 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 			dateBefore.setEnabled(true);
 			dateNext.setEnabled(true);
 			p.takePresences();
-		} else if (x == membres){
+		}
+		
+		//Gestion des competitions
+		else if (x == competition) {
+				competition(db);
+		} else if(x == "") {
+			
+		}
+		
+		//Gestion de la page Membres
+		else if (x == membres){
 			membre("","nom, prenom", db); 
 		}  else if (x == addMember) {
 			newMember();
@@ -282,14 +317,14 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	}
 
 	private void membre(String groupe, String order, Database db) {
-		DefaultTableModel membres = new DefaultTableModel();
+		DefaultTableModel data = new DefaultTableModel();
 		if (groupe.length() > 0) {
-			membres = db.getData("*", "membres", "WHERE groupe = '"+groupe+"' ORDER BY "+order+" ASC");
+			data = db.getData("*", "membres", "WHERE groupe = '"+groupe+"' ORDER BY "+order+" ASC");
 		} else {
-			membres = db.getData("*", "membres", "ORDER BY "+order+" ASC");
+			data = db.getData("*", "membres", "ORDER BY "+order+" ASC");
 		}
 		window.setVisible(false);
-		table.setModel(membres);
+		table.setModel(data);
 		table.setBounds(0, 0, 500, 425);
 		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
         table.setRowSorter(sorter);
@@ -311,6 +346,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.remove(scrollPanePresences);
 		window.remove(scrollPaneCompet);
 
+		presence.setEnabled(true);
+		membres.setEnabled(false);
+		competition.setEnabled(true);
+		
 		window.add(scrollPaneMembre);
 		window.add(addMember);
 		window.setVisible(true);
