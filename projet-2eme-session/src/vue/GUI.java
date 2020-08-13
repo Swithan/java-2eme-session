@@ -116,6 +116,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		club.setBounds(0, 25, 500, 475);
 		window.add(club);
 	}
+	
 	//Creer la barre de menu
 	private void createMenuBar () {
 		presence.addActionListener(this);
@@ -129,6 +130,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.setJMenuBar(bar);
 	}
 	
+	//page presences
 	private void presence (Database db) {
 		DefaultTableModel data = db.getData("id,nom as \"Nom\", prenom as \"Prénom\", groupe as \"Groupe\"", "membres", "");
 		
@@ -172,7 +174,63 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.add(sendPresences);
 		window.setVisible(true);
 	}
+	private void changeDate() {	
+		dateBefore = new JButton("<--");
+		dateBefore.setBounds(300, 0, 100, 25);
+		dateNext = new JButton("-->");
+		dateNext.setBounds(400, 0, 100, 25);
+
+		left.setText(format.format(today));
+		dateBefore.addActionListener(this);
+		left.add(dateBefore);
+		dateNext.addActionListener(this);
+		left.add(dateNext);
+		left.setBounds(0, 0, 500, 25);
+		window.add(left);
+	} 
 	
+	private void absence () {
+		frame.setSize(300, 200);
+		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		frame.setLocationRelativeTo(null);
+		frame.getContentPane().setBackground(Color.white);
+		frame.setLayout(new BorderLayout());
+		
+		label.setBounds(0, 0, 300, 25);
+		
+		motif.setBounds(0, 0, 300, 125);
+		
+		sendAbsence.addActionListener(this);
+		sendAbsence.setBounds(0, 0, 300, 25);
+		
+		frame.add(label, BorderLayout.NORTH);
+		frame.add(motif, BorderLayout.CENTER);
+		frame.add(sendAbsence, BorderLayout.SOUTH);
+		
+		frame.setVisible(true);
+		
+		competition.setEnabled(false);
+		membres.setEnabled(false);
+		dateBefore.setEnabled(false);
+		dateNext.setEnabled(false);
+	}
+	
+	@Override
+	public void tableChanged(TableModelEvent e) {
+		row = e.getFirstRow();
+		int column = e.getColumn();
+		TableModel model = (TableModel)e.getSource();
+		//String name = model.getColumnName(column);
+		Object data = model.getValueAt(row, column);
+		if (column == 4) {
+			if ((boolean) data) {
+				absence();
+			}
+		}
+	}
+	
+	
+	//page competition
 	private void competition(Database db) {
 		
 		DefaultTableModel data = db.getData("*", "competition", "");	
@@ -181,19 +239,32 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		
 		dataCompet.setAutoCreateRowSorter(true);
 		dataCompet.setModel(data);		
-		dataCompet.setName("Presences");
+		dataCompet.setName("Compétition");
 		dataCompet.setBounds(0, 0, 500, 425);
 		dataCompet.getTableHeader().setReorderingAllowed(false);
 		dataCompet.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent me) {
-				if (me.getClickCount() == 2) {
-					JTable target = (JTable)me.getSource();
-					int row = target.getSelectedRow();
+				JTable target = (JTable)me.getSource();
+				row = target.getSelectedRow();
+				if (me.getClickCount() == 1) {
+					dataCompet.setVisible(false);
+					dataCompet.setBounds(0, 0, 500, 25);
+					dataCompet.setVisible(true);
+					JFrame res = new JFrame("Inscription/resultats");
+					res.setSize(500, 300);
+					JTable test = new JTable();
+					DefaultTableModel results = db.getData("*", "courses", "WHERE compet ="+ dataCompet.getValueAt(row, 0));
+					test.setBounds(0,0,500, 300);
+					test.setModel(results);
+					JScrollPane resultPane = new JScrollPane(test);
+					resultPane.setBounds(0, 0, 500, 300);
+					res.add(resultPane);
+					res.setVisible(true);
+				}
+				else if (me.getClickCount() == 2) {
 					//int column = target.getSelectedColumn();
 					inscriptionCompet(db, (int) dataCompet.getValueAt(row, 0));
-					Competition compet = new Competition();
-					compet.editCompet(dataCompet.getValueAt(row, 0));
-				}
+				} 
 			}
 		});
 		
@@ -217,137 +288,8 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.add(addCompet);
 		window.setVisible(true);
 	}
-
-	private void inscriptionCompet(Database db, int id) {
-		System.out.println("members inscription");
-		DefaultTableModel data = db.getData("*", "membres", "");
-		inscriptionCompet.setSize(380, 100);
-		inscriptionCompet.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		inscriptionCompet.setLocationRelativeTo(null);
-		inscriptionCompet.getContentPane().setBackground(Color.white);
-		inscriptionCompet.setLayout(null);
-		
-		
-		int columnNom = data.findColumn("nom");
-		int columnPrenom = data.findColumn("prenom");
-		for(int i = 0; i< data.getRowCount(); i++) {
-			Object nom = data.getValueAt(i, columnNom);
-			Object prenom = data.getValueAt(i, columnPrenom);
-			String membre = nom + " "+ prenom;
-			nomMembre.addItem(membre);
-		}
-		nomMembre.setBounds(5, 0, 150, 25);
-		
-		style.setBounds(160, 0, 100, 25);
-		style.addItem("");
-		style.addItem("Papillon");
-		style.addItem("Dos");
-		style.addItem("Brasse");
-		style.addItem("Nage Libre");
-		style.addItem("4 nages");
-		
-		distance.setBounds(265, 0, 100, 25);
-		distance.addItem("");
-		distance.addItem("50 m");
-		distance.addItem("100 m");
-		distance.addItem("200 m");
-		distance.addItem("400 m");
-		distance.addItem("800 m");
-		distance.addItem("1500 m");
-		
-		inscrireCompet.setBounds(5, 30, 360, 25);
-		inscriptionCompet.add(nomMembre);
-		inscriptionCompet.add(style);
-		inscriptionCompet.add(distance);
-		inscriptionCompet.add(inscrireCompet);
-		inscriptionCompet.setVisible(true);
-		
-	}
-	public GUI () {
-		super();	
-	}
 	
-	@SuppressWarnings("deprecation")
-	@Override
-	public void actionPerformed(ActionEvent e) 
-    { 
-		Database db = new Database();
-		Presence p = new Presence();
-		Membre m = new Membre();
-		Object x = e.getSource();
-		Competition c = new Competition();
-		
-		//Gestion des présences
-		if (x == presence) {
-			presence(db);
-		} else if (x == dateBefore) {
-			today.setDate(today.getDate() - 1);
-			window.setVisible(false);
-			window.remove(left);
-			left.setText(format.format(today));
-			window.add(left);
-			window.setVisible(true);
-		} else if (x == dateNext) {
-			today.setDate(today.getDate() + 1);
-			window.setVisible(false);
-			window.remove(left);
-			left.setText(format.format(today));
-			window.add(left);
-			window.setVisible(true);
-		} else if(x == sendAbsence) {
-			String mtf = motif.getText();
-			if(mtf.length() > 0) {
-				dataMembre.setValueAt(mtf, row, dataMembre.getColumnCount()-1);
-				frame.setVisible(false);
-				//row => id membre
-				//date => date sélectionnée
-				//motif => motif absence
-				p.setAbsent(db, row+1, today, motif.getText());
-				motif.setText(null);
-			}
-		} else if (x == sendPresences) {
-			competition.setEnabled(true);
-			membres.setEnabled(true);
-			dateBefore.setEnabled(true);
-			dateNext.setEnabled(true);
-			p.takePresences();
-		}
-		
-		//Gestion des competitions
-		else if (x == competition) {
-			competition(db);
-		} else if(x == addCompet) {
-			addCompet();
-		} else if(x == newCompet) {
-			boolean checkInsert = c.newCompet(db, nomCompet.getText(), dateDebut.getText(), dateFin.getText(), lieuCompet.getText());
-			if (checkInsert) {
-				competFrame.setVisible(false);
-			} else {
-				JOptionPane.showMessageDialog(null, "Informations incomplètes");
-			}
-		}
-		
-		//Gestion de la page Membres
-		else if (x == membres){
-			membre("","nom, prenom", db); 
-		}  else if (x == addMember) {
-			newMember();
-		} else if (x == confirmMember) {
-			if (lastName.getText().length()<1||firstName.getText().length()<1||sexe.getSelectedItem().toString().length()<1||group.getSelectedItem().toString().length()<1) {
-				JOptionPane.showMessageDialog(null, "Informations incomplètes");
-			} else {
-				boolean added = m.createMembre(db, lastName.getText(), firstName.getText(), sexe.getSelectedItem().toString(), txtDate.getText(), group.getSelectedItem().toString());
-				System.out.println(added);
-				if (added) {
-					member.setVisible(false);
-					membre("","nom, prenom", db);
-				} else {
-					JOptionPane.showMessageDialog(null, "Ce membre existe déjà");
-				}
-			}
-		}
-    }
-	
+	//frame ajouter competition
 	private void addCompet() {
 		competFrame.setSize(350, 150);
 		competFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -377,6 +319,99 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		competFrame.setVisible(true);
 	}
 
+	//frame inscription competition
+	private void inscriptionCompet(Database db, int id) {
+		DefaultTableModel data = db.getData("*", "membres", "");
+		inscriptionCompet.setSize(380, 100);
+		inscriptionCompet.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		inscriptionCompet.setLocationRelativeTo(null);
+		inscriptionCompet.getContentPane().setBackground(Color.white);
+		inscriptionCompet.setLayout(null);
+		
+		
+		int columnNom = data.findColumn("nom");
+		int columnPrenom = data.findColumn("prenom");
+		nomMembre.addItem("");
+		for(int i = 0; i< data.getRowCount(); i++) {
+			Object nom = data.getValueAt(i, columnNom);
+			Object prenom = data.getValueAt(i, columnPrenom);
+			String membre = nom + " "+ prenom;
+			nomMembre.addItem(membre);
+		}
+		nomMembre.setBounds(5, 0, 150, 25);
+		
+		style.setBounds(160, 0, 100, 25);
+		style.addItem("");
+		style.addItem("Papillon");
+		style.addItem("Dos");
+		style.addItem("Brasse");
+		style.addItem("Nage Libre");
+		style.addItem("4 nages");
+		
+		distance.setBounds(265, 0, 100, 25);
+		distance.addItem("");
+		distance.addItem("50 m");
+		distance.addItem("100 m");
+		distance.addItem("200 m");
+		distance.addItem("400 m");
+		distance.addItem("800 m");
+		distance.addItem("1500 m");
+		
+		inscrireCompet.setBounds(5, 30, 360, 25);
+		inscrireCompet.addActionListener(this);
+		inscriptionCompet.add(nomMembre);
+		inscriptionCompet.add(style);
+		inscriptionCompet.add(distance);
+		inscriptionCompet.add(inscrireCompet);
+		inscriptionCompet.setVisible(true);
+	}
+	public GUI () {
+		super();	
+	}
+
+	//page membres
+	private void membre(String groupe, String order, Database db) {
+		DefaultTableModel data = new DefaultTableModel();
+		if (groupe.length() > 0) {
+			data = db.getData("*", "membres", "WHERE groupe = '"+groupe+"' ORDER BY "+order+" ASC");
+		} else {
+			data = db.getData("*", "membres", "ORDER BY "+order+" ASC");
+		}
+		window.setVisible(false);
+		table.getTableHeader().setReorderingAllowed(false);
+		table.setModel(data);
+		table.setBounds(0, 0, 500, 425);
+		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
+        table.setRowSorter(sorter);
+
+        List<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
+        sortKeys.add(new RowSorter.SortKey(5, SortOrder.ASCENDING));
+        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+        sorter.setSortKeys(sortKeys);
+		
+		scrollPaneMembre = new JScrollPane(table);
+		scrollPaneMembre.setBounds(0, 0, 500, 420);
+		
+		addMember.setText("Nouveau membre");
+		addMember.setBounds(0, 420, 500, 25);
+		addMember.addActionListener(this);
+		window.remove(club);
+		window.remove(sendPresences);
+		window.remove(left);
+		window.remove(scrollPanePresences);
+		window.remove(scrollPaneCompet);
+		window.remove(addCompet);
+
+		presence.setEnabled(true);
+		membres.setEnabled(false);
+		competition.setEnabled(true);
+		
+		window.add(scrollPaneMembre);
+		window.add(addMember);
+		window.setVisible(true);
+	}
+	
+	//frame ajouter membre
 	private void newMember() {
 		
 		member.setSize(300, 150);
@@ -428,103 +463,112 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		member.setVisible(true);
 	}
 
-	private void membre(String groupe, String order, Database db) {
-		DefaultTableModel data = new DefaultTableModel();
-		if (groupe.length() > 0) {
-			data = db.getData("*", "membres", "WHERE groupe = '"+groupe+"' ORDER BY "+order+" ASC");
-		} else {
-			data = db.getData("*", "membres", "ORDER BY "+order+" ASC");
-		}
-		window.setVisible(false);
-		table.getTableHeader().setReorderingAllowed(false);
-		table.setModel(data);
-		table.setBounds(0, 0, 500, 425);
-		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
-        table.setRowSorter(sorter);
-
-        List<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
-        sortKeys.add(new RowSorter.SortKey(5, SortOrder.ASCENDING));
-        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-        sorter.setSortKeys(sortKeys);
-		
-		scrollPaneMembre = new JScrollPane(table);
-		scrollPaneMembre.setBounds(0, 0, 500, 420);
-		
-		addMember.setText("Nouveau membre");
-		addMember.setBounds(0, 420, 500, 25);
-		addMember.addActionListener(this);
-		window.remove(club);
-		window.remove(sendPresences);
-		window.remove(left);
-		window.remove(scrollPanePresences);
-		window.remove(scrollPaneCompet);
-		window.remove(addCompet);
-
-		presence.setEnabled(true);
-		membres.setEnabled(false);
-		competition.setEnabled(true);
-		
-		window.add(scrollPaneMembre);
-		window.add(addMember);
-		window.setVisible(true);
-	}
-
-	private void changeDate() {				
-		dateBefore = new JButton("<--");
-		dateBefore.setBounds(300, 0, 100, 25);
-		dateNext = new JButton("-->");
-		dateNext.setBounds(400, 0, 100, 25);
-
-		left.setText(format.format(today));
-		dateBefore.addActionListener(this);
-		left.add(dateBefore);
-		dateNext.addActionListener(this);
-		left.add(dateNext);
-		left.setBounds(0, 0, 500, 25);
-		window.add(left);
-	} 
-	
-	public static void main (String[] args) {
-	}
-
+	@SuppressWarnings("deprecation")
 	@Override
-	public void tableChanged(TableModelEvent e) {
-		row = e.getFirstRow();
-		int column = e.getColumn();
-		TableModel model = (TableModel)e.getSource();
-		//String name = model.getColumnName(column);
-		Object data = model.getValueAt(row, column);
-		if (column == 4) {
-			System.out.println(data);
-			if ((boolean) data) {
-				absence();
+	public void actionPerformed(ActionEvent e) 
+    { 
+		Database db = new Database();
+		Presence p = new Presence();
+		Membre m = new Membre();
+		Object x = e.getSource();
+		Competition c = new Competition();
+		
+		//Gestion des présences
+		if (x == presence) {
+			presence(db);
+		} 
+		//presences pour le jour précédent
+		else if (x == dateBefore) {
+			System.out.println("test");
+			today.setDate(today.getDate() - 1);
+			window.setVisible(false);
+			window.remove(left);
+			left.setText(format.format(today));
+			window.add(left);
+			window.setVisible(true);
+		}
+		//presence pour le jour qui suit
+		else if (x == dateNext) {
+			today.setDate(today.getDate() + 1);
+			window.setVisible(false);
+			window.remove(left);
+			left.setText(format.format(today));
+			window.add(left);
+			window.setVisible(true);
+		} 
+		//envoyer les presences lors d'une modification
+		else if(x == sendAbsence) {
+			String mtf = motif.getText();
+			if(mtf.length() > 0) {
+				dataMembre.setValueAt(mtf, row, dataMembre.getColumnCount()-1);
+				frame.setVisible(false);
+				//row => id membre
+				//date => date sélectionnée
+				//motif => motif absence
+				p.setAbsent(db, row+1, today, motif.getText());
+				motif.setText(null);
+			}
+		} 
+		//envoie toutes les présences
+		else if (x == sendPresences) {
+			competition.setEnabled(true);
+			membres.setEnabled(true);
+			dateBefore.setEnabled(true);
+			dateNext.setEnabled(true);
+			p.takePresences();
+		}
+		
+		//Gestion des competitions
+		else if (x == competition) {
+			competition(db);
+		}
+		//bouton pour ajouter une compet (ouvre une nouvelle frame)
+		else if(x == addCompet) {
+			addCompet();
+		} 
+		//envoyer la nouvelle compet vers la db (et referme la frame)
+		else if(x == newCompet) {
+			boolean checkInsert = c.newCompet(db, nomCompet.getText(), dateDebut.getText(), dateFin.getText(), lieuCompet.getText());
+			if (checkInsert) {
+				competFrame.setVisible(false);
+				window.setVisible(false);
+				window.remove(dataCompet);
+				DefaultTableModel data = db.getData("*", "competition", "");
+				dataCompet.setModel(data);
+				window.setVisible(true);
+			} else {
+				JOptionPane.showMessageDialog(null, "Informations incomplètes");
+			}
+		} else if (x == inscrireCompet) {
+			if (nomMembre.getSelectedIndex()>0 && style.getSelectedIndex()>0 && distance.getSelectedIndex()>0) {
+				DefaultTableModel course = c.course(db, (int) dataCompet.getValueAt(row, 0), (String)nomMembre.getSelectedItem(), (String) style.getSelectedItem(), (String)distance.getSelectedItem());
+				if(course != null) {
+					inscriptionCompet.setVisible(false);
+				}
+				else JOptionPane.showMessageDialog(null, "Une erreur est survenue");
+			} else {
+				JOptionPane.showMessageDialog(null, "Informations incomplètes");
 			}
 		}
-	}
-	
-	private void absence () {
-		frame.setSize(300, 200);
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		frame.setLocationRelativeTo(null);
-		frame.getContentPane().setBackground(Color.white);
-		frame.setLayout(new BorderLayout());
 		
-		label.setBounds(0, 0, 300, 25);
-		
-		motif.setBounds(0, 0, 300, 125);
-		
-		sendAbsence.addActionListener(this);
-		sendAbsence.setBounds(0, 0, 300, 25);
-		
-		frame.add(label, BorderLayout.NORTH);
-		frame.add(motif, BorderLayout.CENTER);
-		frame.add(sendAbsence, BorderLayout.SOUTH);
-		
-		frame.setVisible(true);
-		
-		competition.setEnabled(false);
-		membres.setEnabled(false);
-		dateBefore.setEnabled(false);
-		dateNext.setEnabled(false);
-	}
+		//Gestion de la page Membres
+		else if (x == membres){
+			membre("","nom, prenom", db); 
+		}  else if (x == addMember) {
+			newMember();
+		} else if (x == confirmMember) {
+			if (lastName.getText().length()<1||firstName.getText().length()<1||sexe.getSelectedItem().toString().length()<1||group.getSelectedItem().toString().length()<1) {
+				JOptionPane.showMessageDialog(null, "Informations incomplètes");
+			} else {
+				boolean added = m.createMembre(db, lastName.getText(), firstName.getText(), sexe.getSelectedItem().toString(), txtDate.getText(), group.getSelectedItem().toString());
+				System.out.println(added);
+				if (added) {
+					member.setVisible(false);
+					membre("","nom, prenom", db);
+				} else {
+					JOptionPane.showMessageDialog(null, "Ce membre existe déjà");
+				}
+			}
+		}
+    }
 }
