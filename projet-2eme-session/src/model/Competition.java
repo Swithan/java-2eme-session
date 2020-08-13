@@ -12,7 +12,7 @@ public class Competition {
 	}
 	
 	public void editCompet(Object id) {
-		System.out.println(id);
+		System.out.println("id "+id);
 	}
 
 }

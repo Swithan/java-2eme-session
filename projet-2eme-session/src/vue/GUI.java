@@ -72,6 +72,12 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	public JTextField lieuCompet = new JTextField();
 	public JButton newCompet = new JButton("Valider");
 
+	//inscrire a une competition
+	public JFrame inscriptionCompet= new JFrame("Inscription à la compétition");
+	public JComboBox<String> nomMembre = new JComboBox<String>();
+	public JComboBox<String> style = new JComboBox<String>();
+	public JComboBox<String> distance = new JComboBox<String>();
+	public JButton inscrireCompet = new JButton("Valider");
 	
 	//membres
 	public JLabel newMember = new JLabel();
@@ -184,6 +190,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 					JTable target = (JTable)me.getSource();
 					int row = target.getSelectedRow();
 					//int column = target.getSelectedColumn();
+					inscriptionCompet(db, (int) dataCompet.getValueAt(row, 0));
 					Competition compet = new Competition();
 					compet.editCompet(dataCompet.getValueAt(row, 0));
 				}
@@ -211,6 +218,51 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.setVisible(true);
 	}
 
+	private void inscriptionCompet(Database db, int id) {
+		System.out.println("members inscription");
+		DefaultTableModel data = db.getData("*", "membres", "");
+		inscriptionCompet.setSize(380, 100);
+		inscriptionCompet.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		inscriptionCompet.setLocationRelativeTo(null);
+		inscriptionCompet.getContentPane().setBackground(Color.white);
+		inscriptionCompet.setLayout(null);
+		
+		
+		int columnNom = data.findColumn("nom");
+		int columnPrenom = data.findColumn("prenom");
+		for(int i = 0; i< data.getRowCount(); i++) {
+			Object nom = data.getValueAt(i, columnNom);
+			Object prenom = data.getValueAt(i, columnPrenom);
+			String membre = nom + " "+ prenom;
+			nomMembre.addItem(membre);
+		}
+		nomMembre.setBounds(5, 0, 150, 25);
+		
+		style.setBounds(160, 0, 100, 25);
+		style.addItem("");
+		style.addItem("Papillon");
+		style.addItem("Dos");
+		style.addItem("Brasse");
+		style.addItem("Nage Libre");
+		style.addItem("4 nages");
+		
+		distance.setBounds(265, 0, 100, 25);
+		distance.addItem("");
+		distance.addItem("50 m");
+		distance.addItem("100 m");
+		distance.addItem("200 m");
+		distance.addItem("400 m");
+		distance.addItem("800 m");
+		distance.addItem("1500 m");
+		
+		inscrireCompet.setBounds(5, 30, 360, 25);
+		inscriptionCompet.add(nomMembre);
+		inscriptionCompet.add(style);
+		inscriptionCompet.add(distance);
+		inscriptionCompet.add(inscrireCompet);
+		inscriptionCompet.setVisible(true);
+		
+	}
 	public GUI () {
 		super();	
 	}
@@ -442,7 +494,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		TableModel model = (TableModel)e.getSource();
 		//String name = model.getColumnName(column);
 		Object data = model.getValueAt(row, column);
-		if (column == 3) {
+		if (column == 4) {
 			System.out.println(data);
 			if ((boolean) data) {
 				absence();
