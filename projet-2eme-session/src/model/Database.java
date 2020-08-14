@@ -44,6 +44,7 @@ public class Database {
 
 				@Override
 			    public boolean isCellEditable(int row, int column) {
+					if (this.findColumn("resultat") > -1) return column == this.findColumn("resultat");
 					return column == this.findColumn("Absent");
 			    }
 				@Override

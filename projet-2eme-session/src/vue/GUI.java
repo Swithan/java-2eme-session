@@ -7,17 +7,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
 
+import controller.App;
 import model.Competition;
 import model.Database;
 import model.Membre;
@@ -59,6 +56,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	public JTable dataCompet = new JTable();
 	public JScrollPane scrollPaneCompet = new JScrollPane();
 	public JButton addCompet = new JButton("Nouvelle competition");
+	public JButton addSwimmer = new JButton("Inscrire un membre");
+	private JFrame res = new JFrame("Inscription/resultats");
+	public JScrollPane resultPane = new JScrollPane();
+	public JTable competitionValues = new JTable();
 
 	//nouvelle competition
 	public JFrame competFrame = new JFrame("Nouvelle competition");
@@ -78,6 +79,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	public JComboBox<String> style = new JComboBox<String>();
 	public JComboBox<String> distance = new JComboBox<String>();
 	public JButton inscrireCompet = new JButton("Valider");
+	public JComboBox<String> nomCompetition = new JComboBox<String>();
 	
 	//membres
 	public JLabel newMember = new JLabel();
@@ -108,7 +110,6 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.setLayout(null);
 		
 		//Barre de menu
-		
 		createMenuBar();
 		
 		//Page d'accueil
@@ -137,6 +138,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		dataMembre.setModel(data);
 		dataMembre.getModel().addTableModelListener(this);
 		
+		dataMembre.setAutoCreateRowSorter(true);
 		dataMembre.setName("Presences");
 		dataMembre.setBounds(0, 25, 500, 395);
 		dataMembre.getTableHeader().setReorderingAllowed(false);
@@ -165,6 +167,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.remove(scrollPaneMembre);
 		window.remove(addMember);
 		window.remove(addCompet);
+		window.remove(addSwimmer);
 		
 		presence.setEnabled(false);
 		membres.setEnabled(true);
@@ -220,13 +223,18 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		row = e.getFirstRow();
 		int column = e.getColumn();
 		TableModel model = (TableModel)e.getSource();
-		//String name = model.getColumnName(column);
+		String name = model.getColumnName(column);
 		Object data = model.getValueAt(row, column);
-		if (column == 4) {
+		if (column == 4 && name.equals("Absent")) {
 			if ((boolean) data) {
 				absence();
 			}
 		}
+		else if (name.equals("resultat")) {
+			//TODO : ajouter dans courses resultat (& ajouter dans records?)
+			System.out.println("Ajouter un resultat "+data.toString());
+		}
+		System.out.println(name);
 	}
 	
 	
@@ -235,8 +243,8 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		
 		DefaultTableModel data = db.getData("*", "competition", "");	
 		
-		window.setVisible(false);
-		
+		competitionValues.getModel().addTableModelListener(this);
+
 		dataCompet.setAutoCreateRowSorter(true);
 		dataCompet.setModel(data);		
 		dataCompet.setName("Compétition");
@@ -245,34 +253,21 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		dataCompet.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent me) {
 				JTable target = (JTable)me.getSource();
-				row = target.getSelectedRow();
-				if (me.getClickCount() == 1) {
-					dataCompet.setVisible(false);
-					dataCompet.setBounds(0, 0, 500, 25);
-					dataCompet.setVisible(true);
-					JFrame res = new JFrame("Inscription/resultats");
-					res.setSize(500, 300);
-					JTable test = new JTable();
-					DefaultTableModel results = db.getData("*", "courses", "WHERE compet ="+ dataCompet.getValueAt(row, 0));
-					test.setBounds(0,0,500, 300);
-					test.setModel(results);
-					JScrollPane resultPane = new JScrollPane(test);
-					resultPane.setBounds(0, 0, 500, 300);
-					res.add(resultPane);
-					res.setVisible(true);
+				if (me.getClickCount() == 2) {
+					getInscriptions(db, target);
 				}
-				else if (me.getClickCount() == 2) {
-					//int column = target.getSelectedColumn();
-					inscriptionCompet(db, (int) dataCompet.getValueAt(row, 0));
-				} 
 			}
 		});
-		
 		scrollPaneCompet = new JScrollPane(dataCompet);
 		dataCompet.setFillsViewportHeight(true);
 		scrollPaneCompet.setBounds(0, 0, 500, 420);
-		addCompet.setBounds(0, 420, 500, 25);
+		addCompet.setBounds(0, 420, 250, 25);
 		addCompet.addActionListener(this);
+
+		addSwimmer.setBounds(250, 420, 250, 25);
+		addSwimmer.addActionListener(this);
+		window.setVisible(false);
+
 		window.remove(scrollPanePresences);
 		window.remove(club);
 		window.remove(sendPresences);
@@ -286,9 +281,31 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		
 		window.add(scrollPaneCompet);
 		window.add(addCompet);
+		window.add(addSwimmer);
 		window.setVisible(true);
 	}
 	
+	private void getInscriptions(Database db, JTable target) {
+		row = target.getSelectedRow();
+		res.setVisible(false);
+		res.setSize(500, 300);
+		res.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		res.setLocationRelativeTo(null);
+		res.getContentPane().setBackground(Color.white);
+		res.setLayout(null);
+		res.remove(resultPane);
+
+		DefaultTableModel results = db.getData("membres.nom, membres.prenom, distance, style, inscription, resultat", "courses JOIN membres ON courses.nageur = membres.id", "WHERE compet ="+ dataCompet.getValueAt(row, 0));
+		competitionValues.setBounds(0,0,500, 300);
+		competitionValues.setModel(results);
+		competitionValues.getModel().addTableModelListener(this);
+
+		resultPane = new JScrollPane(competitionValues);
+		resultPane.setBounds(0, 0, 500, 300);
+		res.add(resultPane);
+		res.setVisible(true);		
+	}
+
 	//frame ajouter competition
 	private void addCompet() {
 		competFrame.setSize(350, 150);
@@ -322,7 +339,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 	//frame inscription competition
 	private void inscriptionCompet(Database db, int id) {
 		DefaultTableModel data = db.getData("*", "membres", "");
-		inscriptionCompet.setSize(380, 100);
+		inscriptionCompet.setSize(385, 100);
 		inscriptionCompet.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		inscriptionCompet.setLocationRelativeTo(null);
 		inscriptionCompet.getContentPane().setBackground(Color.white);
@@ -331,25 +348,28 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		
 		int columnNom = data.findColumn("nom");
 		int columnPrenom = data.findColumn("prenom");
-		nomMembre.addItem("");
+		nomMembre.addItem("Nom");
+		nomCompetition.addItem("Competition");
 		for(int i = 0; i< data.getRowCount(); i++) {
 			Object nom = data.getValueAt(i, columnNom);
 			Object prenom = data.getValueAt(i, columnPrenom);
 			String membre = nom + " "+ prenom;
 			nomMembre.addItem(membre);
+			nomCompetition.addItem(dataCompet.getValueAt(i, 1).toString());
 		}
-		nomMembre.setBounds(5, 0, 150, 25);
+		nomCompetition.setBounds(5, 0, 150, 25);
+		nomMembre.setBounds(5, 30, 150, 25);
 		
 		style.setBounds(160, 0, 100, 25);
-		style.addItem("");
+		style.addItem("Style");
 		style.addItem("Papillon");
 		style.addItem("Dos");
 		style.addItem("Brasse");
 		style.addItem("Nage Libre");
 		style.addItem("4 nages");
 		
-		distance.setBounds(265, 0, 100, 25);
-		distance.addItem("");
+		distance.setBounds(160, 30, 100, 25);
+		distance.addItem("Distance");
 		distance.addItem("50 m");
 		distance.addItem("100 m");
 		distance.addItem("200 m");
@@ -357,15 +377,16 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		distance.addItem("800 m");
 		distance.addItem("1500 m");
 		
-		inscrireCompet.setBounds(5, 30, 360, 25);
+		inscrireCompet.setBounds(265, 0, 100, 55);
 		inscrireCompet.addActionListener(this);
 		inscriptionCompet.add(nomMembre);
+		inscriptionCompet.add(nomCompetition);
 		inscriptionCompet.add(style);
 		inscriptionCompet.add(distance);
 		inscriptionCompet.add(inscrireCompet);
 		inscriptionCompet.setVisible(true);
 	}
-	public GUI () {
+	public GUI (Presence model, App controller) {
 		super();	
 	}
 
@@ -378,16 +399,10 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 			data = db.getData("*", "membres", "ORDER BY "+order+" ASC");
 		}
 		window.setVisible(false);
-		table.getTableHeader().setReorderingAllowed(false);
+		table.setAutoCreateRowSorter(true);
 		table.setModel(data);
 		table.setBounds(0, 0, 500, 425);
-		TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(table.getModel());
-        table.setRowSorter(sorter);
-
-        List<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
-        sortKeys.add(new RowSorter.SortKey(5, SortOrder.ASCENDING));
-        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-        sorter.setSortKeys(sortKeys);
+		
 		
 		scrollPaneMembre = new JScrollPane(table);
 		scrollPaneMembre.setBounds(0, 0, 500, 420);
@@ -401,6 +416,7 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		window.remove(scrollPanePresences);
 		window.remove(scrollPaneCompet);
 		window.remove(addCompet);
+		window.remove(addSwimmer);
 
 		presence.setEnabled(true);
 		membres.setEnabled(false);
@@ -515,12 +531,15 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 			membres.setEnabled(true);
 			dateBefore.setEnabled(true);
 			dateNext.setEnabled(true);
-			p.takePresences();
 		}
 		
 		//Gestion des competitions
 		else if (x == competition) {
 			competition(db);
+		} 
+		//inscrire un membre à une compet
+		else if(x == addSwimmer) {
+			inscriptionCompet(db, (int) dataCompet.getValueAt(row, 0));
 		}
 		//bouton pour ajouter une compet (ouvre une nouvelle frame)
 		else if(x == addCompet) {
@@ -540,9 +559,9 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 				JOptionPane.showMessageDialog(null, "Informations incomplètes");
 			}
 		} else if (x == inscrireCompet) {
-			if (nomMembre.getSelectedIndex()>0 && style.getSelectedIndex()>0 && distance.getSelectedIndex()>0) {
-				DefaultTableModel course = c.course(db, (int) dataCompet.getValueAt(row, 0), (String)nomMembre.getSelectedItem(), (String) style.getSelectedItem(), (String)distance.getSelectedItem());
-				if(course != null) {
+			if (nomMembre.getSelectedIndex()>0 && style.getSelectedIndex()>0 && distance.getSelectedIndex()>0 && nomCompetition.getSelectedIndex()>0) {
+				boolean course = c.course(db, (int) dataCompet.getValueAt(row, 0), (String)nomMembre.getSelectedItem(), (String) style.getSelectedItem(), (String)distance.getSelectedItem());
+				if(course) {
 					inscriptionCompet.setVisible(false);
 				}
 				else JOptionPane.showMessageDialog(null, "Une erreur est survenue");
