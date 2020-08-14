@@ -1,10 +1,8 @@
 /**
  * 
  */
-package controller;
+package model;
 
-import model.Database;
-import model.Presence;
 import vue.GUI;
 
 /**
@@ -20,7 +18,6 @@ public class App {
 	public static void main(String[] args) {
 		
 		Database db = new Database();
-		Presence p = new Presence();
 		GUI gui = new GUI(null, null);
 		
 		gui.createInterface(db);

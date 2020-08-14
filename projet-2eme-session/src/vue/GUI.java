@@ -14,7 +14,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
-import controller.App;
+import model.App;
 import model.Competition;
 import model.Database;
 import model.Membre;
@@ -232,9 +232,14 @@ public class GUI extends JFrame implements ActionListener, TableModelListener {
 		}
 		else if (name.equals("resultat")) {
 			//TODO : ajouter dans courses resultat (& ajouter dans records?)
-			System.out.println("Ajouter un resultat "+data.toString());
+			Competition c = new Competition();
+			Database db = new Database();
+			Object nom = model.getValueAt(row, 0);
+			Object prenom = model.getValueAt(row, 1);
+			Object distance = model.getValueAt(row, 2);
+			Object style = model.getValueAt(row, 3);
+			c.result(data.toString(), db, nom, prenom, distance, style);
 		}
-		System.out.println(name);
 	}
 	
 	

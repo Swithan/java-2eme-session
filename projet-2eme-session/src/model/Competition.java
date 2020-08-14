@@ -35,4 +35,67 @@ public class Competition {
 		return false;
 	}
 
+
+
+	public void result(String data, Database db, Object nom, Object prenom, Object distance, Object style) {
+		
+		DefaultTableModel getid = db.getData("id", "membres", "WHERE nom = '"+nom.toString()+"'");
+		int id = (int) getid.getValueAt(0, 0);
+				
+		DefaultTableModel pb = db.getData("temps", "records", "WHERE nageur = "+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+
+		if(distance.toString().equals("50 m")) fifty(data, pb, db, id, distance, style);
+		else hundreds(data, pb, db, id, distance, style);
+	}
+
+	private void hundreds(String data, DefaultTableModel pb, Database db, int id, Object distance, Object style) {
+		
+		String[] time = data.split("\\.");
+		System.out.println(data.split("\\.").length);
+		System.out.println(time[0]);
+		int timeMiliSeconds = Integer.parseInt(time[1]);
+		time = time[0].split(":");
+		int timeSeconds = Integer.parseInt(time[1]);
+		int timeMinutes = Integer.parseInt(time[0]);
+
+		db.updateData("courses", "resultat", "'" +data+"' WHERE nageur ="+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+
+		if(pb.getRowCount()>0) {
+			String[] record = pb.getValueAt(0, 0).toString().split(".");
+			int recordMiliSeconds = Integer.parseInt(record[1]);
+			record = record[0].split(":");
+			int recordSeconds = Integer.parseInt(record[1]);
+			int recordMinutes = Integer.parseInt(record[0]);
+			
+			
+			if(timeMinutes < recordMinutes || 
+					timeMinutes == recordMinutes && timeSeconds < recordSeconds ||
+					timeMinutes == recordMinutes && timeSeconds == recordSeconds && timeMiliSeconds < recordMiliSeconds) {
+				db.updateData("records", "temps", "'" +data+"' WHERE nageur ="+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+			} 
+			else System.out.println("No PB");
+		} 
+		else {
+			db.updateData("records", "temps", "'" +data+"' WHERE nageur ="+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+		}
+	}
+
+
+
+	private void fifty(String data, DefaultTableModel pb, Database db, int id, Object distance, Object style) {
+		String[] time = data.split("\\.");
+		System.out.println(time[0]+" "+time[1]);
+		
+		db.updateData("courses", "resultat", "'"+data+"' WHERE nageur = "+id);
+		if(pb.getRowCount()>0) {
+			String[] record = pb.getValueAt(0, 0).toString().split("\"");
+			
+			if(Integer.parseInt(time[0]) < Integer.parseInt(record[0]) ||
+					Integer.parseInt(time[0]) == Integer.parseInt(record[0]) && Integer.parseInt(time[1]) < Integer.parseInt(record[1])) {
+				db.updateData("records", "temps", "'" +data+"' WHERE nageur ="+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+			} else System.out.println("No PB");
+		} else {
+			db.updateData("records", "temps", "'" +data+"' WHERE nageur ="+id+" AND distance = '"+distance.toString()+"' AND style = '"+style.toString()+"'");
+		}
+	}
 }

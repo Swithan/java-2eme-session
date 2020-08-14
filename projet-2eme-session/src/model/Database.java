@@ -93,7 +93,7 @@ public class Database {
 	}
 	
 	public void updateData(String table, String column, String data) {
-		String sql = "UPDATE "+table+" SET ";
+		String sql = "UPDATE "+table+" SET "+ column+" = "+data;
 		try {
 			Connection co = connexion();
 			Statement state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
@@ -106,5 +106,17 @@ public class Database {
 		}
 		
 	};
+	public void sql(String sql) {
+		try {
+			Connection co = connexion();
+			Statement state = co.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+			int result = state.executeUpdate(sql);
+			if (result>0) {
+				System.out.println("Row(s) updated");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	}
 
